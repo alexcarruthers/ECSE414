@@ -50,6 +50,6 @@ if __name__ == '__main__':
 
 
 
-    hosts = ['www.google.com', 'www.facebook.com', 'www.microsoft.com']
+    hosts = ['www.auckland.ac.nz']
     for host in hosts:
         runtrace(host, collection)
