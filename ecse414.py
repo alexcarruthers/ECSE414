@@ -1,6 +1,8 @@
 import subprocess
 import datetime
 from pymongo import MongoClient
+import urllib2
+import json
 
 def runtrace(host, collection):
     res = subprocess.check_output(['traceroute', host])
@@ -25,6 +27,10 @@ def runtrace(host, collection):
                 hop['probe1'] = line[2]
                 hop['probe2'] = line[3]
                 hop['probe3'] = line[4]
+                res = urllib2.urlopen('http://api.ipaddresslabs.com/iplocation/v1.7/locateip?key=SAK9PLJG3V2434LHH27Z&ip=' + hop['hopip'] + '&format=JSON').read()
+                loc = json.loads(res)
+                hop['lat'] = loc['geolocation_data']['latitude']
+                hop['lon'] = loc['geolocation_data']['longitude']
             except:
                 hop['hopname'] = '* * *'
 
@@ -32,14 +38,18 @@ def runtrace(host, collection):
 
     result['datetime'] = datetime.datetime.now().__str__()
     result['numhops'] = len(result['hops'])
+    result['source'] = 'alex'
 
     collection.insert(result)
 
 if __name__ == '__main__':
-    MONGO_URL = 'mongodb://alex:alexisgreat@paulo.mongohq.com:10055/ecse414'
+    MONGO_URL = 'mongodb://alex:alexisgreat@ds053158.mongolab.com:53158/ecse414'
     client = MongoClient(MONGO_URL)
     db = client.ecse414
     collection = db.traceroutes
+
+
+
     hosts = ['www.google.com', 'www.facebook.com', 'www.microsoft.com']
     for host in hosts:
         runtrace(host, collection)
