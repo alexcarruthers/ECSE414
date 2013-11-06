@@ -50,6 +50,6 @@ if __name__ == '__main__':
 
 
 
-    hosts = ['www.auckland.ac.nz']
+    hosts = ['auckland.ac.nz','engg.hku.hk','coet.udsm.ac.tz','eesc.usp.br','cam.ac.uk','ee.caltech.edu']
     for host in hosts:
         runtrace(host, collection)
