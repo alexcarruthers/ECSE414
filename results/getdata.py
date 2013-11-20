@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import json
 import datetime
 import numpy as np
-with open('alex_auckland.json') as file:
+from pprint import pprint
+with open('alex_caltech.json') as file:
 	data = json.load(file)
 
 rtt = []
