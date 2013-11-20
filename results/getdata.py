@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import json
 import datetime
 import numpy as np
-from pprint import pprint
+
 with open('alex_caltech.json') as file:
 	data = json.load(file)
 
@@ -22,11 +22,30 @@ for trace in data['traces']:
 			time.append(datetime.datetime.combine(datetime.datetime.today(), t))
 			break
 
+
+plt.plot_date(time, rtt, '.')
+plt.figure("Figure2")
+
+deletions = []
+
+
+std = 2.0*np.std(rtt)
+md = np.median(rtt)
+for i in range(0, len(rtt)-1):
+    if abs(rtt[i] - md) >= std:
+        deletions.append(i)
+
+for i in reversed(range(0, len(deletions) - 1)):
+    del(rtt[deletions[i]])
+    del(time[deletions[i]])
+
+rttPrune = np.array(rtt)
+
 times = matplotlib.dates.date2num(time)
-plt.plot_date(time,rtt)
+plt.plot_date(time, rttPrune, '.')
 plt.show()
 
 print(len(rtt))
 print(len(time))
 print(fuckups)
-			
+
