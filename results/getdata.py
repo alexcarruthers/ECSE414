@@ -30,7 +30,7 @@ for dataset in datasets:
 	plt.xlabel('Time of Day')
 	plt.ylabel('RTT (ms)')
 	plt.plot_date(time, rtt, '.')
-	plt.savefig(dataset + ' all')
+	plt.savefig(dataset + ' all', bbox_inches=0)
 	plt.figure(dataset + ' no outliers')
 
 	deletions = []
@@ -53,6 +53,6 @@ for dataset in datasets:
 	plt.xlabel('Time of Day')
 	plt.ylabel('RTT (ms)')
 	plt.plot_date(time, rttPrune, '.')
-	plt.savefig(dataset + ' no outliers')
+	plt.savefig(dataset + ' no outliers', bbox_inches=0)
 #plt.show()
 
