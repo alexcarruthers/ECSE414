@@ -4,48 +4,55 @@ import json
 import datetime
 import numpy as np
 
-with open('alex_caltech.json') as file:
-	data = json.load(file)
+datasets = ['alex_auckland','alex_br','alex_caltech','alex_coet','alex_engg','alex_uk','shaun_auckland','shaun_br','shaun_caltech','shaun_coet','shaun_engg','shaun_uk']
+for dataset in datasets:
+	print('opening ' + dataset)
+	with open(dataset + '.json') as file:
+		data = json.load(file)
 
-rtt = []
-time = []
-fuckups = 0
-for trace in data['traces']:
-	for hop in reversed(trace['hops']):
-		if hop['hopname'] is not "* * *":
-			try:
-				rtt.append(float(hop['probe1'].split()[0]))
-			except:
-				fuckups+=1
+	rtt = []
+	time = []
+	fuckups = 0
+	for trace in data['traces']:
+		for hop in reversed(trace['hops']):
+			if hop['hopname'] is not "* * *":
+				try:
+					rtt.append(float(hop['probe1'].split()[0]))
+				except:
+					fuckups+=1
+					break
+				t = datetime.datetime.strptime(trace['datetime'], '%Y-%m-%d %H:%M:%S.%f').time()
+				time.append(datetime.datetime.combine(datetime.datetime.today(), t))
 				break
-			t = datetime.datetime.strptime(trace['datetime'], '%Y-%m-%d %H:%M:%S.%f').time()
-			time.append(datetime.datetime.combine(datetime.datetime.today(), t))
-			break
+
+	plt.figure(dataset + ' all')
+	plt.title(dataset + ' - all data')
+	plt.xlabel('Time of Day')
+	plt.ylabel('RTT (ms)')
+	plt.plot_date(time, rtt, '.')
+	plt.savefig(dataset + ' all')
+	plt.figure(dataset + ' no outliers')
+
+	deletions = []
 
 
-plt.plot_date(time, rtt, '.')
-plt.figure("Figure2")
+	std = 2.0*np.std(rtt)
+	md = np.median(rtt)
+	for i in range(0, len(rtt)-1):
+		if abs(rtt[i] - md) >= std:
+			deletions.append(i)
 
-deletions = []
+	for i in reversed(range(0, len(deletions) - 1)):
+		del(rtt[deletions[i]])
+		del(time[deletions[i]])
 
+	rttPrune = np.array(rtt)
 
-std = 2.0*np.std(rtt)
-md = np.median(rtt)
-for i in range(0, len(rtt)-1):
-    if abs(rtt[i] - md) >= std:
-        deletions.append(i)
-
-for i in reversed(range(0, len(deletions) - 1)):
-    del(rtt[deletions[i]])
-    del(time[deletions[i]])
-
-rttPrune = np.array(rtt)
-
-times = matplotlib.dates.date2num(time)
-plt.plot_date(time, rttPrune, '.')
-plt.show()
-
-print(len(rtt))
-print(len(time))
-print(fuckups)
+	times = matplotlib.dates.date2num(time)
+	plt.title(dataset + ' - outliers removed')
+	plt.xlabel('Time of Day')
+	plt.ylabel('RTT (ms)')
+	plt.plot_date(time, rttPrune, '.')
+	plt.savefig(dataset + ' no outliers')
+#plt.show()
 
