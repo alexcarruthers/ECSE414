@@ -21,70 +21,39 @@ for dataset in datasets:
 	with open(dataset + '.json') as file:
 		data = json.load(file)
 
-	rtt = []
-	time = {}
-	changes = []
+	changes = {}
 	
 	previous = data['traces'][0]			
 	for trace in data['traces'][1:]:
 		tracetime = datetime.datetime.strptime(trace['datetime'], '%Y-%m-%d %H:%M:%S.%f').replace(minute=0, second=0, microsecond=0)
 		if previous['numhops'] != trace['numhops']:
-			#changes.append(1)
 			try:
-				time[tracetime] += 1
+				changes[tracetime] += 1
 			except KeyError:
-				time[tracetime] = 1
+				changes[tracetime] = 1
 		else:
 			for (prevhop, trhop) in zip(previous['hops'], trace['hops']):
 				if bool('hopip' in prevhop.keys()) != bool('hopip' in trhop.keys()):
 					try:
-						time[tracetime] += 1
+						changes[tracetime] += 1
 					except KeyError:
-						time[tracetime] = 1					
+						changes[tracetime] = 1					
 					break
 				try:
 					if prevhop['hopip'] != trhop['hopip']:
-						#changes.append(1)
 						try:
-							time[tracetime] += 1
+							changes[tracetime] += 1
 						except KeyError:
-							time[tracetime] = 1					
+							changes[tracetime] = 1					
 						break
 				except KeyError:
 					continue
-			#changes.append(0)
-			#time[datetime.datetime.strptime(trace['datetime'], '%Y-%m-%d %H:%M:%S.%f').replace(minute=0, second=0, microsecond=0)] += 1
 		previous = trace
 
-	plt.figure(dataset + ' all', figsize=(16,12))
+	plt.figure(dataset + ' all', figsize=(12,9))
 	plt.title(dataset)
 	plt.xlabel('Day')
 	plt.ylabel('Route Changes per Hour')
 	plt.ylim(0,14)
-	plt.plot_date(time.keys(), ave, '.')
+	plt.plot_date(changes.keys(), changes.values(), '.')
 	plt.savefig(dataset + ' changes', bbox_inches=0)
-	#plt.figure(dataset + ' no outliers', figsize=(16,12))
-
-	deletions = []
-
-
-	# std = 2.0*np.std(rtt)
-	# md = np.median(rtt)
-	# for i in range(0, len(rtt)-1):
-		# if abs(rtt[i] - md) >= std:
-			# deletions.append(i)
-
-	# for i in reversed(range(0, len(deletions) - 1)):
-		# del(rtt[deletions[i]])
-		# del(time[deletions[i]])
-
-	# rttPrune = np.array(rtt)
-
-	# times = matplotlib.dates.date2num(time)
-	# plt.title(dataset + ' - outliers removed')
-	# plt.xlabel('Day')
-	# plt.ylabel('RTT (ms)')
-	# plt.plot_date(time, rttPrune, '.')
-	# plt.savefig(dataset + ' no outliers', bbox_inches=0)
-#plt.show()
-

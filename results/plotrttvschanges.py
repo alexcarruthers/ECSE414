@@ -4,87 +4,73 @@ import json
 import datetime
 import numpy as np
 
-def ave(hops):
+def rtt(hops):
 	rtts = []
 	for hop in reversed(hops):
 		if hop['hopname'] is not "* * *":
 			try:
-				rtts.append(float(hop['probe1'].split()[0]))
+				return float(hop['probe1'].split()[0])
 			except:
-				fuckups+=1
+				pass
 			break
-	return sum(v)/len(v)
+	return 0
 
 datasets = ['alex_auckland','alex_br','alex_caltech','alex_coet','alex_engg','alex_uk','shaun_auckland','shaun_br','shaun_caltech','shaun_coet','shaun_engg','shaun_uk']
+
 for dataset in datasets:
 	print('opening ' + dataset)
 	with open(dataset + '.json') as file:
 		data = json.load(file)
 
-	rtt = []
-	time = {}
+	numchanges = {}
+	times = {}
 	changes = []
+	
 	
 	previous = data['traces'][0]			
 	for trace in data['traces'][1:]:
 		tracetime = datetime.datetime.strptime(trace['datetime'], '%Y-%m-%d %H:%M:%S.%f').replace(minute=0, second=0, microsecond=0)
 		if previous['numhops'] != trace['numhops']:
-			#changes.append(1)
 			try:
-				time[tracetime] += 1
+				numchanges[tracetime] += 1
 			except KeyError:
-				time[tracetime] = 1
+				numchanges[tracetime] = 1
+				times[tracetime] = []
+			times[tracetime].append(rtt(trace['hops']))
 		else:
 			for (prevhop, trhop) in zip(previous['hops'], trace['hops']):
 				if bool('hopip' in prevhop.keys()) != bool('hopip' in trhop.keys()):
 					try:
-						time[tracetime] += 1
+						numchanges[tracetime] += 1
 					except KeyError:
-						time[tracetime] = 1					
+						numchanges[tracetime] = 1	
+						times[tracetime] = []
+					times[tracetime].append(rtt(trace['hops']))
 					break
 				try:
 					if prevhop['hopip'] != trhop['hopip']:
-						#changes.append(1)
 						try:
-							time[tracetime] += 1
+							numchanges[tracetime] += 1
 						except KeyError:
-							time[tracetime] = 1					
+							numchanges[tracetime] = 1
+							times[tracetime] = []
+						times[tracetime].append(rtt(trace['hops']))
 						break
 				except KeyError:
 					continue
-			#changes.append(0)
-			#time[datetime.datetime.strptime(trace['datetime'], '%Y-%m-%d %H:%M:%S.%f').replace(minute=0, second=0, microsecond=0)] += 1
 		previous = trace
 
-	plt.figure(dataset + ' all', figsize=(16,12))
+	x = []
+	y = []
+		
+	for k,v in numchanges.iteritems():
+		x.append(v)
+		y.append(sum(times[k])/len(times[k]))
+	
+	plt.figure(dataset + ' all', figsize=(12,9))
 	plt.title(dataset)
-	plt.xlabel('Day')
+	plt.xlabel('Average RTT per hour')
 	plt.ylabel('Route Changes per Hour')
 	plt.ylim(0,14)
-	plt.plot_date(time.keys(), ave, '.')
+	plt.plot(y,x,'.')
 	plt.savefig(dataset + ' changes', bbox_inches=0)
-	#plt.figure(dataset + ' no outliers', figsize=(16,12))
-
-	deletions = []
-
-
-	# std = 2.0*np.std(rtt)
-	# md = np.median(rtt)
-	# for i in range(0, len(rtt)-1):
-		# if abs(rtt[i] - md) >= std:
-			# deletions.append(i)
-
-	# for i in reversed(range(0, len(deletions) - 1)):
-		# del(rtt[deletions[i]])
-		# del(time[deletions[i]])
-
-	# rttPrune = np.array(rtt)
-
-	# times = matplotlib.dates.date2num(time)
-	# plt.title(dataset + ' - outliers removed')
-	# plt.xlabel('Day')
-	# plt.ylabel('RTT (ms)')
-	# plt.plot_date(time, rttPrune, '.')
-	# plt.savefig(dataset + ' no outliers', bbox_inches=0)
-#plt.show()
-
